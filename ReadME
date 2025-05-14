@@ -1,0 +1,69 @@
+📡 RF Spectrum AI: Управление радиочастотным спектром с помощью ИИ
+Проект использует машинное обучение для анализа радиочастотного спектра, обнаружения помех и динамического управления частотными каналами.
+
+🔍 Возможности
+🎯 Обнаружение помех с точностью до 95% (Random Forest)
+
+📶 Динамическое переключение каналов (Reinforcement Learning)
+
+📊 Визуализация спектра в реальном времени
+
+🤖 Интеграция с SDR-оборудованием (RTL-SDR, HackRF)(Возможно будет)
+
+🛠️ Технологии
+<p align="center"> <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python" alt="Python"> <img src="https://img.shields.io/badge/scikit--learn-1.3+-orange?logo=scikit-learn" alt="scikit-learn"> <img src="https://img.shields.io/badge/pandas-2.0+-red?logo=pandas" alt="pandas"> <img src="https://img.shields.io/badge/numpy-1.24+-yellow?logo=numpy" alt="numpy"> <img src="https://img.shields.io/badge/matplotlib-3.7+-green?logo=matplotlib" alt="matplotlib"> </p>
+⚡ Быстрый старт
+Установка
+bash
+git clone https://github.com/ZhenyaSonic/rf-spectrum-ai.git
+cd rf-spectrum-ai
+pip install -r requirements.txt
+Запуск
+Обучение модели:
+
+bash
+python train.py
+Предсказание помех:
+
+bash
+python predict.py
+📁 rf_spectrum_ai/
+│
+├── 📁 data/
+│   ├── 📄 rf_spectrum_data.csv          # Пример реальных данных (опционально)
+│   └── 📄 rf_spectrum_synthetic.csv     # Автогенерируемые данные
+│
+├── 📁 models/
+│   ├── 📄 rf_interference_model.pkl     # Обученная модель
+│   └── 📄 scaler.pkl                    # Нормализатор
+│
+├── 📁 reports/                          # Отчеты анализа
+│   └── 📄 signal_report.csv             # История анализов
+│
+├── 📁 utils/
+│   ├── 📄 helpers.py                    # Вспомогательные функции
+│   └── 📄 visualization.py              # Функции визуализации
+│
+├── 📄 config.py                         # Конфигурация проекта
+├── 📄 train.py                          # Обучение модели
+├── 📄 predict.py                        # Анализ сигналов
+├── 📄 realtime_monitor.py               # Режим реального времени (опционально)
+└── 📄 requirements.txt                  # Зависимости
+📊 Пример работы
+Confusion Matrix
+Матрица ошибок для классификатора помех
+
+📈 Генерация данных
+Если у вас нет реальных данных, скрипт автоматически создаст синтетические:
+
+python
+# Пример синтетических данных
+frequency = np.random.uniform(800, 1000, 1000)  # МГц
+amplitude = np.random.uniform(-70, -30, 1000)   # дБ
+
+
+📜 Лицензия
+MIT © 2023 [ZhenyaSonic]
+
+<p align="center"> <img src="https://img.shields.io/github/stars/ваш-репозиторий?style=social" alt="Stars"> <img src="https://img.shields.io/github/forks/ваш-репозиторий?style=social" alt="Forks"> </p>
+Совет: Для реального применения подключите SDR-устройство и модифицируйте helpers.py для захвата сигналов!
