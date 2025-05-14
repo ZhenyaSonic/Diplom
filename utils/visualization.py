@@ -17,12 +17,9 @@ def plot_confusion_matrix(y_true, y_pred):
 def plot_signal_quality(signal):
     """Визуализация параметров сигнала"""
     labels = ['Частота (MHz)', 'Амплитуда (dB)', 'SNR (dB)', 'Полоса (MHz)']
-    colors = ['blue', 'green', 'orange', 'red']
-
     plt.figure(figsize=(10, 5))
-    bars = plt.bar(labels, signal, color=colors)
+    bars = plt.bar(labels, signal, color=['blue', 'green', 'orange', 'red'])
 
-    # Добавляем значения на столбцы
     for bar in bars:
         height = bar.get_height()
         plt.text(
@@ -32,6 +29,5 @@ def plot_signal_quality(signal):
         )
 
     plt.title('Диагностика сигнала')
-    plt.ylim(min(signal)-10, max(signal)+10)
     plt.grid(axis='y', linestyle='--')
     plt.show()
