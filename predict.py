@@ -16,18 +16,33 @@ class SignalAnalyzer:
             Config.MODELS_DIR /
             "scaler.pkl"
         )
+        # Убедимся, что scaler имеет имена признаков
+        if not hasattr(self.scaler, 'feature_names_in_'):
+            self.scaler.feature_names_in_ = [
+                'frequency',
+                'amplitude',
+                'snr',
+                'bandwidth'
+            ]
 
     def analyze(self, signal):
-        """Полный анализ сигнала"""
-        # Преобразуем в DataFrame с правильными именами признаков
-        signal_df = pd.DataFrame([signal], columns=[
-            'frequency',
-            'amplitude',
-            'snr',
-            'bandwidth']
+        """Полный анализ сигнала с правильным форматом данных"""
+        # Создаем правильно оформленный DataFrame
+        signal_df = pd.DataFrame(
+            [signal],
+            columns=self.scaler.feature_names_in_ if hasattr(
+                self.scaler,
+                'feature_names_in_'
+            ) else [
+                'frequency',
+                'amplitude',
+                'snr',
+                'bandwidth'
+            ]
         )
-        signal_scaled = self.scaler.transform(signal_df)
 
+        # Преобразуем и предсказываем
+        signal_scaled = self.scaler.transform(signal_df)
         proba = self.model.predict_proba(signal_scaled)[0]
         prediction = self.model.predict(signal_scaled)[0]
 
