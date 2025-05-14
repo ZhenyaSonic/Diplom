@@ -1,7 +1,8 @@
+import numpy as np
 from rtlsdr import RtlSdr
+
 from predict import SignalAnalyzer
 from utils.visualization import plot_signal_quality
-import numpy as np
 
 
 def capture_signal():

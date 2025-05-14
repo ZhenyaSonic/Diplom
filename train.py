@@ -1,10 +1,11 @@
-import pandas as pd
+import joblib
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
-import joblib
+
 from config import Config
 from utils.visualization import plot_confusion_matrix
 
