@@ -1,35 +1,34 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 from config import Config
 
 
 def plot_spectrum(data):
-    """Визуализация распределения частот и амплитуд."""
+    """Визуализация распределения частот и мощностей"""
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
     plt.hist(data['frequency'], bins=30, color='blue', alpha=0.7)
-    plt.title("Распределение частот")
+    plt.title("Распределение частот LTE")
     plt.xlabel("Частота (МГц)")
     plt.ylabel("Количество")
 
     plt.subplot(1, 2, 2)
-    plt.hist(data['amplitude'], bins=30, color='red', alpha=0.7)
-    plt.title("Распределение амплитуд")
-    plt.xlabel("Амплитуда (дБ)")
+    plt.hist(data['peak_power'], bins=30, color='red', alpha=0.7)
+    plt.title("Распределение мощностей")
+    plt.xlabel("Мощность (dBm)")
     plt.show()
 
 
-def generate_signal_with_params(freq=None, amp=None, snr=None, bw=None):
-    """Генерация сигнала с возможностью частичного указания параметров"""
+def generate_signal_with_params(freq=None, power=None):
+    """Генерация сигнала LTE с возможностью частичного указания параметров"""
     signal = [
         freq if freq is not None else np.random.uniform(*Config.FREQ_RANGE),
-        amp if amp is not None else np.random.uniform(*Config.AMP_RANGE),
-        snr if snr is not None else np.random.uniform(*Config.SNR_RANGE),
-        bw if bw is not None else np.random.choice(Config.BW_OPTIONS)
+        power if power is not None else np.random.uniform(*Config.PEAK_POWER_RANGE)
     ]
     return signal
 
 
 def generate_signals_batch(n=5, **params):
-    """Генерация набора сигналов с возможностью фиксации параметров"""
+    """Генерация набора сигналов LTE с возможностью фиксации параметров"""
     return [generate_signal_with_params(**params) for _ in range(n)]

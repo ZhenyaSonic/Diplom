@@ -9,18 +9,19 @@ class Config:
     MODELS_DIR = BASE_DIR / "models"
     REPORTS_DIR = BASE_DIR / "reports"
 
-    # Параметры сигналов
-    FREQ_RANGE = (800, 1000)  # MHz
-    AMP_RANGE = (-70, -30)    # dB
-    SNR_RANGE = (5, 30)       # dB
-    BW_OPTIONS = [5, 10, 20]  # MHz
+    # Параметры сигналов LTE
+    FREQ_RANGE = (700, 2700)    # MHz (LTE диапазон)
+    PEAK_POWER_RANGE = (-50, 0) # dBm (пиковая мощность)
+
+    # Классы помех
+    INTERFERENCE_TYPES = ['Импульсные', 'Широкополосные', 'Смешанные']
 
     # Настройки генерации
     DEFAULT_BATCH_SIZE = 5
     SIGNAL_TYPES = {
-        'good': {'snr': (15, 30), 'amp': (-50, -30)},
-        'noisy': {'snr': (5, 15), 'amp': (-70, -50)},
-        'interference': {'bw': 20}
+        'impulse': {'peak_power': (-10, 0)},
+        'wideband': {'peak_power': (-50, -30)},
+        'mixed': {'peak_power': (-30, -10)}
     }
 
     # Создание директорий

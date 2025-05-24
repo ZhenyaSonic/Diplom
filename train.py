@@ -1,12 +1,14 @@
-import pandas as pd
+import joblib
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
-import joblib
+
 from config import Config
-from utils.visualization import plot_confusion_matrix
+from utils.visualization import (plot_confusion_matrix,
+                                 plot_interference_classes)
 
 
 def load_or_generate_data():
@@ -19,13 +21,25 @@ def load_or_generate_data():
 
         # Генерация синтетических данных
         np.random.seed(42)
+        n_samples = 1000
         data = pd.DataFrame({
-            'frequency': np.random.uniform(*Config.FREQ_RANGE, 1000),
-            'amplitude': np.random.uniform(*Config.AMP_RANGE, 1000),
-            'snr': np.random.uniform(*Config.SNR_RANGE, 1000),
-            'bandwidth': np.random.choice(Config.BW_OPTIONS, 1000),
-            'is_interference': np.random.randint(0, 2, 1000)
+            'frequency': np.random.uniform(*Config.FREQ_RANGE, n_samples),
+            'peak_power': np.random.uniform(*Config.PEAK_POWER_RANGE, n_samples),
         })
+
+        # Генерация меток классов
+        conditions = [
+            (data['peak_power'] > -20) & (data['frequency'].between(700, 1000)),
+            (data['peak_power'] < -40) & (data['frequency'].between(1800, 2700)),
+            (data['peak_power'].between(-40, -20)) | 
+                (data['frequency'].between(1000, 1800))
+        ]
+        data['interference_type'] = np.select(
+            conditions, 
+            Config.INTERFERENCE_TYPES, 
+            default='Смешанные'
+        )
+
         data.to_csv(Config.DATA_DIR / "rf_spectrum_synthetic.csv", index=False)
         return data
     except Exception as e:
@@ -38,8 +52,8 @@ def main():
     data = load_or_generate_data()
 
     # Подготовка данных
-    X = data[['frequency', 'amplitude', 'snr', 'bandwidth']]
-    y = data['is_interference']
+    X = data[['frequency', 'peak_power']]
+    y = data['interference_type']
 
     # Нормализация
     scaler = StandardScaler()
@@ -52,10 +66,10 @@ def main():
         random_state=42
     )
 
-    # Обучение модели
+    # Обучение модели (меняем на классификатор с тремя классами)
     model = RandomForestClassifier(
         n_estimators=100,
-        class_weight={0: 1, 1: 2},  # Больший вес для помех
+        class_weight='balanced',
         random_state=42
     )
     model.fit(X_train, y_train)
@@ -63,7 +77,10 @@ def main():
     # Оценка
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred))
-    plot_confusion_matrix(y_test, y_pred)
+    plot_confusion_matrix(y_test, y_pred, classes=Config.INTERFERENCE_TYPES)
+
+    # Визуализация классификации (новая функция)
+    plot_interference_classes(X_test, y_test, model)
 
     # Сохранение модели
     joblib.dump(model, Config.MODELS_DIR / "rf_interference_model.pkl")

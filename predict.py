@@ -1,82 +1,65 @@
-import pandas as pd
-import numpy as np
-import joblib
 from datetime import datetime
+
+import joblib
+import numpy as np
+import pandas as pd
+
 from config import Config
-from utils.visualization import plot_signal_quality
+from utils.helpers import generate_signal_with_params, generate_signals_batch
+from utils.visualization import (plot_confusion_matrix,
+                                 plot_interference_classes,
+                                 plot_signal_quality)
 
 
 class SignalAnalyzer:
     def __init__(self):
-        self.model = joblib.load(
-            Config.MODELS_DIR /
-            "rf_interference_model.pkl"
-        )
-        self.scaler = joblib.load(
-            Config.MODELS_DIR /
-            "scaler.pkl"
-        )
-        # Убедимся, что scaler имеет имена признаков
+        self.model = joblib.load(Config.MODELS_DIR / "rf_interference_model.pkl")
+        self.scaler = joblib.load(Config.MODELS_DIR / "scaler.pkl")
+
+        # Устанавливаем имена признаков если их нет
         if not hasattr(self.scaler, 'feature_names_in_'):
-            self.scaler.feature_names_in_ = [
-                'frequency',
-                'amplitude',
-                'snr',
-                'bandwidth'
-            ]
+            self.scaler.feature_names_in_ = ['frequency', 'peak_power']
 
     def analyze(self, signal):
-        """Полный анализ сигнала с правильным форматом данных"""
-        # Создаем правильно оформленный DataFrame
+        """Анализ сигнала с двумя параметрами"""
         signal_df = pd.DataFrame(
             [signal],
-            columns=self.scaler.feature_names_in_ if hasattr(
-                self.scaler,
-                'feature_names_in_'
-            ) else [
-                'frequency',
-                'amplitude',
-                'snr',
-                'bandwidth'
-            ]
+            columns=self.scaler.feature_names_in_
         )
 
         # Преобразуем и предсказываем
         signal_scaled = self.scaler.transform(signal_df)
-        proba = self.model.predict_proba(signal_scaled)[0]
         prediction = self.model.predict(signal_scaled)[0]
+        proba = self.model.predict_proba(signal_scaled)[0]
 
         return {
             "frequency": signal[0],
-            "amplitude": signal[1],
-            "snr": signal[2],
-            "bandwidth": signal[3],
-            "is_interference": bool(prediction),
-            "interference_prob": float(proba[1]),
+            "peak_power": signal[1],
+            "interference_type": prediction,
+            "probabilities": dict(zip(Config.INTERFERENCE_TYPES, proba)),
             "timestamp": datetime.now(),
-            "recommendations": self._generate_recommendations(signal, proba)
+            "recommendations": self._generate_recommendations(signal, prediction)
         }
 
-    def _generate_recommendations(self, signal, proba):
-        """Генерация рекомендаций по улучшению"""
-        freq, amp, snr, bw = signal
+    def _generate_recommendations(self, signal, prediction):
+        """Генерация рекомендаций по типу помех"""
+        freq, power = signal
         recs = []
 
-        if proba[1] > 0.7:
-            recs.append(f"🔴 Высокая вероятность помех ({proba[1]:.1%})")
-            if snr < 10:
-                recs.append(f"→ Увеличить мощность передатчика (SNR: {snr:.1f} dB)")
-            if bw > 15:
-                recs.append(f"→ Уменьшить полосу пропускания ({bw} MHz)")
-        elif proba[1] > 0.3:
-            recs.append(f"🟡 Возможны помехи ({proba[1]:.1%})")
+        if prediction == "Импульсные":
+            recs.append("🔴 Обнаружены импульсные помехи")
+            recs.append("→ Рекомендуется использовать фильтры нижних частот")
+        elif prediction == "Широкополосные":
+            recs.append("🟡 Обнаружены широкополосные помехи")
+            recs.append("→ Рекомендуется сузить полосу пропускания")
         else:
-            recs.append(f"🟢 Сигнал чистый ({proba[0]:.1%})")
+            recs.append("🟢 Обнаружены смешанные помехи")
+            recs.append("→ Требуется комплексный анализ спектра")
 
-        if amp < -60:
-            recs.append(f"⚡ Проверить антенну (амплитуда {amp:.1f} dB)")
-        if 2400 < freq < 2500:
-            recs.append("📶 Wi-Fi диапазон может быть перегружен")
+        if power > -20:
+            recs.append("⚡ Высокая мощность сигнала - возможны искажения")
+        if freq > 2500:
+            recs.append("📶 Высокочастотный диапазон - возможны потери")
 
         return recs
 
@@ -96,30 +79,26 @@ def save_report(report):
 def manual_input():
     """Ручной ввод параметров сигнала"""
     print("\n" + "="*50)
-    print("Ручной ввод параметров сигнала")
+    print("Ручной ввод параметров сигнала LTE")
     print("="*50)
 
-    freq = float(input("Частота (MHz): "))
-    amp = float(input("Амплитуда (dB): "))
-    snr = float(input("SNR (dB): "))
-    bw = float(input("Ширина полосы (MHz): "))
+    freq = float(input(f"Частота (MHz) [{Config.FREQ_RANGE[0]}-{Config.FREQ_RANGE[1]}]: "))
+    power = float(input(f"Пиковая мощность (dBm) [{Config.PEAK_POWER_RANGE[0]}-{Config.PEAK_POWER_RANGE[1]}]: "))
 
-    return [freq, amp, snr, bw]
+    return [freq, power]
 
 
 def generate_random_signal():
-    """Генерация случайного сигнала"""
+    """Генерация случайного сигнала LTE"""
     print("\n" + "="*50)
-    print("Генерация случайного сигнала")
+    print("Генерация случайного сигнала LTE")
     print("="*50)
 
     freq = np.random.uniform(*Config.FREQ_RANGE)
-    amp = np.random.uniform(*Config.AMP_RANGE)
-    snr = np.random.uniform(*Config.SNR_RANGE)
-    bw = np.random.choice(Config.BW_OPTIONS)
+    power = np.random.uniform(*Config.PEAK_POWER_RANGE)
 
-    print(f"Сгенерирован сигнал: {freq:.1f} MHz, {amp:.1f} dB, SNR {snr:.1f} dB, полоса {bw} MHz")
-    return [freq, amp, snr, bw]
+    print(f"Сгенерирован сигнал: {freq:.1f} MHz, {power:.1f} dBm")
+    return [freq, power]
 
 
 def analyze_single_signal(analyzer):
@@ -147,7 +126,7 @@ def analyze_single_signal(analyzer):
 
 def batch_analysis(analyzer, n=5):
     """Пакетный анализ нескольких случайных сигналов"""
-    print(f"\nГенерация и анализ {n} случайных сигналов...")
+    print(f"\nГенерация и анализ {n} случайных сигналов LTE...")
     for i in range(n):
         signal = generate_random_signal()
         report = analyzer.analyze(signal)
@@ -161,7 +140,7 @@ def main():
 
     while True:
         print("\n" + "="*50)
-        print("Меню анализа сигналов")
+        print("Меню анализа сигналов LTE")
         print("="*50)
         print("1 - Анализ одного сигнала")
         print("2 - Пакетный анализ (5 случайных сигналов)")
