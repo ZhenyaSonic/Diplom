@@ -77,7 +77,7 @@ def main():
     # Оценка
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred))
-    plot_confusion_matrix(y_test, y_pred, classes=Config.INTERFERENCE_TYPES)
+    plot_confusion_matrix(y_test, y_pred)
 
     # Визуализация классификации (новая функция)
     plot_interference_classes(X_test, y_test, model)
