@@ -1,6 +1,8 @@
 from datetime import datetime
+from pathlib import Path
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -135,6 +137,117 @@ def batch_analysis(analyzer, n=5):
         save_report(report)
 
 
+def load_signals_from_csv(filepath):
+    """Загрузка сигналов из CSV файла в формате: frequency,peak_power"""
+    try:
+        df = pd.read_csv(filepath)
+
+        # Проверка необходимых столбцов
+        required_columns = ['frequency', 'peak_power']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError("CSV файл должен содержать столбцы: frequency, peak_power")
+
+        # Преобразуем в список сигналов
+        signals = df[required_columns].values.tolist()
+        return signals
+    except Exception as e:
+        print(f"Ошибка при загрузке CSV: {e}")
+        return []
+
+
+def analyze_csv_file(analyzer):
+    """Анализ сигналов из CSV файла"""
+    print("\n" + "="*50)
+    print("Анализ сигналов из CSV файла")
+    print("="*50)
+
+    filepath = input("Введите путь к CSV файлу (или оставьте пустым для data/signals.csv): ").strip()
+    if not filepath:
+        filepath = Config.DATA_DIR / "signals.csv"
+    else:
+        filepath = Path(filepath)
+
+    if not filepath.exists():
+        print(f"Файл {filepath} не найден!")
+        return
+
+    signals = load_signals_from_csv(filepath)
+    if not signals:
+        print("Не удалось загрузить сигналы из файла")
+        return
+
+    reports = []
+    for i, signal in enumerate(signals, 1):
+        print(f"\nАнализ сигнала {i}/{len(signals)}: {signal[0]} MHz, {signal[1]} dBm")
+        report = analyzer.analyze(signal)
+        reports.append(report)
+
+        # Вывод результатов
+        print("\n".join(report["recommendations"]))
+        plot_signal_quality(signal)
+
+    # Визуализация всех сигналов на одном графике
+    plot_all_signals(signals, reports)
+
+
+def plot_all_signals(signals, reports):
+    """Визуализация всех сигналов с зонами помех и классификацией"""
+    plt.figure(figsize=(14, 8))
+
+    # Цвета и стили для разных типов помех
+    colors = {
+        'Импульсные': 'red',
+        'Широкополосные': 'blue',
+        'Смешанные': 'green'
+    }
+
+    # 1. Рисуем фоновые зоны помех (примерные параметры из обучения)
+    plt.axhspan(-20, 0, facecolor='red', alpha=0.1, label='Зона импульсных помех')
+    plt.axhspan(-50, -40, facecolor='blue', alpha=0.1, label='Зона широкополосных помех')
+    plt.axhspan(-40, -20, facecolor='green', alpha=0.1, label='Зона смешанных помех')
+
+    # 2. Рисуем реальные сигналы
+    for signal, report in zip(signals, reports):
+        freq, power = signal
+        int_type = report['interference_type']
+        plt.scatter(freq, power, color=colors[int_type], s=100, edgecolor='black', 
+                   label=int_type if int_type not in plt.gca().get_legend_handles_labels()[1] else "")
+
+    # 3. Добавляем разделительные линии и аннотации
+    plt.axhline(y=-20, color='red', linestyle='--', alpha=0.5)
+    plt.axhline(y=-40, color='blue', linestyle='--', alpha=0.5)
+
+    plt.annotate('Импульсные помехи\n(высокая мощность)',
+                 xy=(0.5, -10), xycoords='axes fraction',
+                 ha='center', color='red')
+    plt.annotate('Широкополосные помехи\n(низкая мощность)',
+                 xy=(0.5, -45), xycoords='axes fraction',
+                 ha='center', color='blue')
+    plt.annotate('Смешанные помехи',
+                 xy=(0.5, -30), xycoords='axes fraction',
+                 ha='center', color='green')
+
+    # 4. Настройки графика
+    plt.xlabel('Частота (MHz)', fontsize=12)
+    plt.ylabel('Пиковая мощность (dBm)', fontsize=12)
+    plt.title('Классификация помех с зонами типичных параметров', fontsize=14, pad=20)
+    plt.grid(True, linestyle='--', alpha=0.7)
+
+    # Оптимизация легенды
+    handles, labels = plt.gca().get_legend_handles_labels()
+    unique_labels = []
+    unique_handles = []
+    for handle, label in zip(handles, labels):
+        if label not in unique_labels:
+            unique_labels.append(label)
+            unique_handles.append(handle)
+
+    plt.legend(unique_handles, unique_labels, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     analyzer = SignalAnalyzer()
 
@@ -142,22 +255,33 @@ def main():
         print("\n" + "="*50)
         print("Меню анализа сигналов LTE")
         print("="*50)
-        print("1 - Анализ одного сигнала")
-        print("2 - Пакетный анализ (5 случайных сигналов)")
-        print("3 - Выход")
+        print("1 - Анализ одного сигнала (ручной ввод)")
+        print("2 - Анализ случайного сигнала")
+        print("3 - Анализ сигналов из CSV файла")
+        print("4 - Пакетный анализ (5 случайных сигналов)")
+        print("5 - Выход")
 
-        choice = input("Ваш выбор (1/2/3): ")
+        choice = input("Ваш выбор (1-5): ")
 
         if choice == '1':
             analyze_single_signal(analyzer)
         elif choice == '2':
-            batch_analysis(analyzer)
+            signal = generate_random_signal()
+            report = analyzer.analyze(signal)
+            print("\n" + "="*50)
+            print(f"Результаты анализа сигнала {report['frequency']} MHz:")
+            print("\n".join(report["recommendations"]))
+            plot_signal_quality(signal)
+            save_report(report)
         elif choice == '3':
+            analyze_csv_file(analyzer)
+        elif choice == '4':
+            batch_analysis(analyzer)
+        elif choice == '5':
             print("Завершение работы...")
             break
         else:
             print("Неверный выбор, попробуйте снова")
-
 
 if __name__ == "__main__":
     main()
