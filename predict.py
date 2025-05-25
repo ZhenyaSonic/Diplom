@@ -194,6 +194,14 @@ def plot_all_signals(signals, reports):
     """Визуализация всех сигналов с зонами помех и классификацией"""
     plt.figure(figsize=(14, 8))
 
+    try:
+        # Пытаемся загрузить обучающие данные
+        train_data = pd.read_csv(Config.DATA_DIR / "train_data.csv")
+        plt.scatter(train_data['frequency'], train_data['peak_power'],
+                   c='gray', alpha=0.2, s=30, label='Обучающие данные')
+    except Exception as e:
+        print(f"Не удалось загрузить обучающие данные: {e}")
+
     # Цвета и стили для разных типов помех
     colors = {
         'Импульсные': 'red',
@@ -259,7 +267,8 @@ def main():
         print("2 - Анализ случайного сигнала")
         print("3 - Анализ сигналов из CSV файла")
         print("4 - Пакетный анализ (5 случайных сигналов)")
-        print("5 - Выход")
+        print("5 - Использование в Jupyter Notebook")
+        print("6 - Выход")
 
         choice = input("Ваш выбор (1-5): ")
 
@@ -278,10 +287,15 @@ def main():
         elif choice == '4':
             batch_analysis(analyzer)
         elif choice == '5':
+            from utils.interactive_plot import interactive_analysis
+            csv_path = input("Введите путь к CSV файлу (Enter для signals.csv): ").strip() or None
+            interactive_analysis(csv_path)
+        elif choice == '6':
             print("Завершение работы...")
             break
         else:
             print("Неверный выбор, попробуйте снова")
+
 
 if __name__ == "__main__":
     main()
