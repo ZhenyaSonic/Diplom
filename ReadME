@@ -1,69 +1,145 @@
-📡 RF Spectrum AI: Управление радиочастотным спектром с помощью ИИ
-Проект использует машинное обучение для анализа радиочастотного спектра, обнаружения помех и динамического управления частотными каналами.
+# RF Spectrum Interference Analyzer
+## 📌 Оглавление
+- [Назначение проекта](#-назначение-проекта)
+- [Функциональность](#-функциональность)
+- [Структура проекта](#-структура-проекта)
+- [Установка и настройка](#️-установка-и-настройка)
+- [Использование](#-использование)
+- [Примеры работы](#-примеры-работы)
+- [Технологии и библиотеки](#-технологии-и-библиотеки)
+- [Разработчики](#-разработчики)
+- [Лицензия](#-лицензия)
 
-🔍 Возможности
-🎯 Обнаружение помех с точностью до 95% (Random Forest)
+---
 
-📶 Динамическое переключение каналов (Reinforcement Learning)
+## 🎯 Назначение проекта
+Проект предназначен для анализа радиочастотного спектра с целью:
+* Классификации типов помех (импульсные, широкополосные, смешанные)
+* Визуализации характеристик сигналов
+* Генерации рекомендаций по устранению помех
+* Пакетной обработки данных измерений
 
-📊 Визуализация спектра в реальном времени
+---
 
-🤖 Интеграция с SDR-оборудованием (RTL-SDR, HackRF)(Возможно будет)
+## ✨ Функциональность
+**Анализ в реальном времени:**
+* Ручной ввод параметров сигнала
+* Генерация случайных сигналов
+* Загрузка данных из CSV-файлов
 
-🛠️ Технологии
-<p align="center"> <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python" alt="Python"> <img src="https://img.shields.io/badge/scikit--learn-1.3+-orange?logo=scikit-learn" alt="scikit-learn"> <img src="https://img.shields.io/badge/pandas-2.0+-red?logo=pandas" alt="pandas"> <img src="https://img.shields.io/badge/numpy-1.24+-yellow?logo=numpy" alt="numpy"> <img src="https://img.shields.io/badge/matplotlib-3.7+-green?logo=matplotlib" alt="matplotlib"> </p>
-⚡ Быстрый старт
-Установка
-bash
-git clone https://github.com/ZhenyaSonic/rf-spectrum-ai.git
-cd rf-spectrum-ai
-pip install -r requirements.txt
-Запуск
-Обучение модели:
+**Классификация помех:**
+* Импульсные (высокая мощность)
+* Широкополосные (низкая мощность)
+* Смешанные (переходные характеристики)
 
-bash
+**Визуализация:**
+* Графики параметров сигналов
+* Карта распределения помех
+* Интерактивные диаграммы
+
+**Отчетность:**
+* Автоматическое сохранение результатов
+* Генерация рекомендаций
+* Экспорт в CSV
+
+---
+
+## 📂 Структура проекта
+
+rf_spectrum_analyzer/
+├── data/                   # Данные для анализа и обучения
+│   ├── signals.csv         # Пример файла с сигналами
+│   └── train_data.csv      # Обучающая выборка
+│
+├── models/                 # Обученные модели
+│   ├── rf_model.pkl        # Модель RandomForest
+│   └── scaler.pkl          # Нормализатор данных
+│
+├── reports/                # Генерируемые отчеты
+│   └── signal_report.csv   # Результаты анализов
+│
+├── utils/                  # Вспомогательные модули
+│   ├── visualization.py    # Функции визуализации
+│   └── interactive_plot.py # Интерактивные графики
+│
+├── config.py               # Конфигурация проекта
+├── train.py                # Обучение модели
+├── predict.py              # Анализ сигналов
+├── requirements.txt        # Зависимости
+└── README.md               # Документация
+
+
+---
+
+## ⚙️ Установка и настройка
+1.  **Клонируйте репозиторий:**
+    ```
+    git clone [https://github.com/yourusername/rf_spectrum_analyzer.git](https://github.com/yourusername/rf_spectrum_analyzer.git)
+    cd rf_spectrum_analyzer
+    ```
+2.  **Установите зависимости:**
+    ```
+    pip install -r requirements.txt
+    ```
+3.  **(Опционально) Для Jupyter поддержки:**
+    ```
+    jupyter nbextension enable --py widgetsnbextension
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
+    ```
+4.  **Подготовьте данные:**
+    * Поместите CSV-файлы с сигналами в папку `data/`
+    * Формат данных: `frequency,peak_power` (частота в МГц, мощность в dBm)
+
+---
+
+## 🖥 Использование
+**Обучение модели**
+```
 python train.py
-Предсказание помех:
+```
+(Модель автоматически сохраняется в папку models/)
 
-bash
+Анализ сигналов
+
+
+```
 python predict.py
-📁 rf_spectrum_ai/
-│
-├── 📁 data/
-│   ├── 📄 rf_spectrum_data.csv          # Пример реальных данных (опционально)
-│   └── 📄 rf_spectrum_synthetic.csv     # Автогенерируемые данные
-│
-├── 📁 models/
-│   ├── 📄 rf_interference_model.pkl     # Обученная модель
-│   └── 📄 scaler.pkl                    # Нормализатор
-│
-├── 📁 reports/                          # Отчеты анализа
-│   └── 📄 signal_report.csv             # История анализов
-│
-├── 📁 utils/
-│   ├── 📄 helpers.py                    # Вспомогательные функции
-│   └── 📄 visualization.py              # Функции визуализации
-│
-├── 📄 config.py                         # Конфигурация проекта
-├── 📄 train.py                          # Обучение модели
-├── 📄 predict.py                        # Анализ сигналов
-├── 📄 realtime_monitor.py               # Режим реального времени (опционально)
-└── 📄 requirements.txt                  # Зависимости
-📊 Пример работы
-Confusion Matrix
-Матрица ошибок для классификатора помех
+```
+Меню программы:
 
-📈 Генерация данных
-Если у вас нет реальных данных, скрипт автоматически создаст синтетические:
+1 - Анализ одного сигнала (ручной ввод)
+2 - Анализ случайного сигнала
+3 - Анализ сигналов из CSV файла
+4 - Пакетный анализ (5 случайных)
+5 - Интерактивный анализ
+6 - Выход
+Пример анализа CSV
 
-python
-# Пример синтетических данных
-frequency = np.random.uniform(800, 1000, 1000)  # МГц
-amplitude = np.random.uniform(-70, -30, 1000)   # дБ
+```
+from utils.interactive_plot import interactive_analysis
+interactive_analysis("data/signals.csv")
+```
+📊 Примеры работы
+Классификация сигналов
 
+Интерактивный анализ
 
+Матрица ошибок
+
+🛠 Технологии и библиотеки
+Язык программирования: Python 3.8+
+Машинное обучение:
+scikit-learn
+pandas
+numpy
+Визуализация:
+matplotlib
+seaborn
+mpl-interactions
+Другое:
+joblib (сериализация моделей)
+pathlib (работа с путями)
+👨‍💻 Разработчики
+[Братанов Евгений] - Основной разработчик
+[Савоштин Александр] - Консультант по RF
 📜 Лицензия
-MIT © 2023 [ZhenyaSonic]
-
-<p align="center"> <img src="https://img.shields.io/github/stars/ваш-репозиторий?style=social" alt="Stars"> <img src="https://img.shields.io/github/forks/ваш-репозиторий?style=social" alt="Forks"> </p>
-Совет: Для реального применения подключите SDR-устройство и модифицируйте helpers.py для захвата сигналов!
