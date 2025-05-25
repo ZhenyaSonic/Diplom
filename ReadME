@@ -74,7 +74,7 @@ rf_spectrum_analyzer/
 ## ⚙️ Установка и настройка
 1.  **Клонируйте репозиторий:**
     ```
-    git clone [https://github.com/yourusername/rf_spectrum_analyzer.git](https://github.com/yourusername/rf_spectrum_analyzer.git)
+    git clone https://github.com/ZhenyaSonic/rf_spectrum_analyzer.git (https://github.com/ZhenyaSonic/rf_spectrum_analyzer.git)
     cd rf_spectrum_analyzer
     ```
 2.  **Установите зависимости:**
